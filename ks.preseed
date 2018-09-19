@@ -1,0 +1,29 @@
+# Find disk devices
+# Unmount any hd partition that is mounted
+d-i partman/early_command string \
+USBDEV=$(list-devices usb-partition | sed "s/\(.*\)./\1/");\
+BOOTDEV=$(list-devices disk | grep -v "$USBDEV" | head -1);\
+debconf-set partman-auto/disk $BOOTDEV;\
+debconf-set grub-installer/bootdev $BOOTDEV;\
+umount /media;
+
+# This makes partman automatically partition without confirmation, provided
+# that you told it what to do using one of the methods above.
+
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+#Choose not to update at all.
+d-i pkgsel/update-policy select none
+
+#No reporting experience
+popularity-contest popularity-contest/participate boolean false
+
+#This one makes grub install on MBR. -> Don't if it can solve the cannot install grub problem.
+d-i grub-installer/only_debian boolean true
+
+#Install selected packages
+d-i pkgsel/include string openssh-server qemu-kvm libvirt-bin
+
